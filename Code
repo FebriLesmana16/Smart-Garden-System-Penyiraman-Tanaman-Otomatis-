@@ -1,0 +1,68 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+Servo kranServo;
+
+const int sensorPin = A0;  
+const int buzzerPin = 9;    
+const int ledPin = 8;       
+const int servoPin = 7;     
+
+const int threshold = 400; 
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  
+  kranServo.attach(servoPin);
+  kranServo.write(0); 
+  
+  lcd.init();
+  lcd.backlight();
+  
+  lcd.setCursor(2, 0);
+  lcd.print("SMART GARDEN");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  int nilaiSensor = analogRead(sensorPin);
+  
+  lcd.setCursor(0, 0);
+  lcd.print("Moisture: ");
+  lcd.print(nilaiSensor);
+  lcd.print("    ");
+
+  if (nilaiSensor > threshold) {
+    lcd.setCursor(0, 1);
+    lcd.print("TANAH KERING  ");
+    
+    digitalWrite(ledPin, HIGH);    
+    digitalWrite(buzzerPin, HIGH); 
+    delay(500); 
+    digitalWrite(buzzerPin, LOW);
+    
+    for (int pos = 0; pos <= 180; pos += 1) {
+      kranServo.write(pos);
+      delay(90); 
+    }
+    delay(500);
+    for (int pos = 180; pos >= 0; pos -= 1) {
+      kranServo.write(pos);
+      delay(90);
+    }
+  } 
+  else {
+    lcd.setCursor(0, 1);
+    lcd.print("TANAH BASAH   ");
+    
+    digitalWrite(ledPin, LOW);     
+    digitalWrite(buzzerPin, LOW); 
+    kranServo.write(0);            
+  }
+
+  delay(500); 
+}
